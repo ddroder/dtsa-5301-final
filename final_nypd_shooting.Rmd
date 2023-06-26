@@ -1,0 +1,143 @@
+---
+title: Visualization Report
+output: html_document
+---
+
+```{r, echo=FALSE}
+# Install required packages if not already installed
+# install.packages(c("ggplot2", "randomForest", "tidyr"))
+
+# Load required libraries
+library(ggplot2)
+library(randomForest)
+library(tidyr)
+library(tidyr)
+library(dplyr)
+
+```
+## Bar Plot - Boro Distribution
+
+```{r bar_plot, echo=FALSE}
+# Your bar plot code here
+# Set the file path to your CSV file
+file_path <- "C:/Users/DDroder/Downloads/NYPD_Shooting_Incident_Data__Historic_.csv"
+```
+
+```{r}
+# Read the CSV file
+
+data <- read.csv(file_path)
+# Install required package if not already installed
+# install.packages("dplyr")
+
+# Tidy the data
+tidy_data <- data %>%
+  select(-c(INCIDENT_KEY, OCCUR_DATE, OCCUR_TIME)) %>%
+  drop_na()  # Remove rows with missing values
+
+# Print the tidied data
+print(head(tidy_data))
+
+# Compute summary statistics
+summary_stats <- summary(data)
+
+# Print the summary statistics
+print(summary_stats)
+
+```
+```{r}
+# View the contents of the data frame
+print(head(data))
+
+```
+
+
+```{r}
+
+# Count occurrences of each Boro
+boro_counts <- table(data$BORO)
+
+# Create bar plot
+bar_plot <- ggplot(data = data, aes(x = BORO)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Distribution of Incidents by Borough", x = "Borough", y = "Count") +
+  theme_minimal()
+
+# Display the bar plot
+print(bar_plot)
+```
+
+```{r}
+data$OCCUR_TIME <- as.POSIXct(data$OCCUR_TIME, format = "%H:%M:%S")
+
+# Create histogram
+hist_plot <- ggplot(data = data, aes(x = OCCUR_TIME)) +
+  geom_histogram(fill = "steelblue", bins = 20) +
+  labs(title = "Distribution of Incident Occurrence Times", x = "Occurrence Time", y = "Count") +
+  theme_minimal()
+
+# Display the histogram
+print(hist_plot)
+```
+
+```{r}
+# Create scatter plot
+scatter_plot <- ggplot(data = data, aes(x = Longitude, y = Latitude)) +
+  geom_point(color = "steelblue") +
+  labs(title = "Spatial Distribution of Incidents", x = "Longitude", y = "Latitude") +
+  theme_minimal()
+
+# Display the scatter plot
+print(scatter_plot)
+```
+
+```{r}
+# Create scatter plot with color and shape based on variables
+scatter_plot <- ggplot(data = data, aes(x = Longitude, y = Latitude, color = BORO, shape = STATISTICAL_MURDER_FLAG)) +
+  geom_point(size = 3) +
+  labs(title = "Spatial Distribution of Incidents", x = "Longitude", y = "Latitude") +
+  theme_minimal()
+
+# Display the scatter plot
+print(scatter_plot)
+
+
+
+```
+```{r}
+# Install required package if not already installed
+# install.packages("randomForest")
+
+
+# Prepare the data
+data_for_classification <- subset(data, select = -c(INCIDENT_KEY, OCCUR_DATE, OCCUR_TIME))
+data_for_classification$STATISTICAL_MURDER_FLAG <- as.factor(data_for_classification$STATISTICAL_MURDER_FLAG)
+
+# Handle missing values by removing rows with missing values
+data_for_classification <- na.omit(data_for_classification)
+
+# Split the data into training and testing sets
+set.seed(123)  # For reproducibility
+train_indices <- sample(1:nrow(data_for_classification), 0.7 * nrow(data_for_classification))
+train_data <- data_for_classification[train_indices, ]
+test_data <- data_for_classification[-train_indices, ]
+
+# Build the classification model (Random Forest)
+model <- randomForest(STATISTICAL_MURDER_FLAG ~ ., data = train_data)
+
+# Make predictions on the test data
+predictions <- predict(model, newdata = test_data)
+
+# Evaluate the model
+accuracy <- sum(predictions == test_data$STATISTICAL_MURDER_FLAG) / nrow(test_data)
+print(paste("Accuracy:", accuracy))
+
+```
+```{r}
+# Assuming "model" is your trained randomForest model
+importance <- importance(model)
+
+# Plot variable importance
+varImpPlot(model, main="Variable Importance")
+
+```
