@@ -19,6 +19,20 @@ install.packages("stringr")
 '
 ```
 
+# Statement of intent
+This project aims to conduct a thorough exploration and analysis of the global COVID-19 data made available by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. The dataset comprises daily reports of confirmed COVID-19 cases and deaths, reported globally at the country level, and more granularly for the United States.
+
+Our primary goal is to understand the patterns and trends present in this data, with a particular focus on how the number of confirmed cases changes over time. To achieve this, we will employ a range of data visualization techniques, providing a graphical representation of the data's temporal trajectory.
+
+Further, we aim to construct a predictive model to determine if we can predict a country based on the date and the number of confirmed cases reported. For this purpose, we will use a Random Forest model, which is an ensemble machine learning method known for its robustness and adaptability. While this model might not have immediate practical application, it serves as a demonstration of how machine learning can be used to find patterns in complex, real-world data.
+
+Throughout our analysis, we will be mindful of the potential sources of bias inherent in this kind of data and in our chosen modeling approach. These include biases related to data reporting, selection, time, the assumptions of the Random Forest model, and possible inconsistencies in data collection over time and across different countries.
+
+This analysis should not be interpreted as a definitive account of the spread or impact of COVID-19, but rather as an exploration of what the available data can tell us and how machine learning techniques can be applied to this data.
+
+By the end of this project, we hope to provide valuable insights into the patterns of COVID-19 case reporting and demonstrate the applicability of data science techniques in understanding real-world events.
+
+
 # Sources of bias in data.
 
 There are three types of bias that come to mind when working with this dataset.
@@ -139,4 +153,3 @@ varImpPlot(rf_model)
 
 # Conclusions.
 From the graphs, we can see that the model does quite well at learning the idea of country mapped against cases and date. It is putting a more significant chunk of brainpower into the cases, meaning that it favors looking at case number as its prefered parameter. I know that this model does not have much practical use, though i think it is quite facinating that even given just two parameters it is able to classify what country it is looking at with a degree of accuracy greater than chance. To conclude, we can see that our model on the cleaned data prefers to look at cases when it is trying to classify which country it is looking at. 
-
