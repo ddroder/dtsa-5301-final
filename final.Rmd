@@ -1,0 +1,142 @@
+---
+title: "final_assignment"
+output: html_document
+date: "2023-06-25"
+Author: "Daniel Droder" 
+---
+
+# Required Packages. Delete the single quotes surrounding install.packages to install.
+
+```{r}
+##I have commented these out, but these are all the required packages needed to run the script.
+'
+install.packages("tidyr")
+install.packages("ggplot2")
+install.packages("readr")
+install.packages("dplyr")
+install.packages("lubridate")
+install.packages("stringr")
+'
+```
+
+# Sources of bias in data.
+
+There are three types of bias that come to mind when working with this dataset.
+
+<ol>
+
+<li>Reporting bias</li>
+
+<br> Not all ocountries have the same capacity or criteria for testing and confirming cases. This could lead to under or overreporting.<br>
+
+<li>Selection Bias</li>
+
+<br> This dataset only includes confirmed cases. this means it does not account for untested individuals who may have had the disease but were never diagnosed.<br>
+
+<li>Time Bias</li>
+
+<br> The spread of covid varies over time. Factors such as intervention, public behavior, variants, all affect the number of cases. a model trained on data from one point in time may not generalize well.
+
+</ol>
+
+# Sources of bias for modeling 
+<br>
+There are plenty of sources of bias that can occur in our model.
+
+<ol>
+
+<li>Random Forest Bias</li>
+
+<br> It assumes that features are independent of eachother, which may not be true in our case. date and number of cases could be correlated due to various factors such as incrased testing over time.
+
+<li>outcome bias</li>
+
+<br> The model is predicting the country based on date and cases. However, the number of cases in a country in a sepcifc date is a result of nnnumers factors not included in the model.
+
+<li>Measurement Bias</li>
+
+<br> DateDifferent countries may report their data at different times or may not report their data daily. this could lead to inconsistencies in the number of cases reported per date.
+
+```{r}
+require(tidyr)
+require(stringr)
+require(readr)
+```
+
+```{r}
+url_in="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/"
+file_names=c(
+  "time_series_covid19_confirmed_global.csv",
+  "time_series_covid19_confirmed_US.csv",
+  "time_series_covid19_deaths_US.csv",
+  "time_series_covid19_deaths_global.csv"
+)
+urls=str_c(url_in,file_names)
+global_cases=read_csv(urls[1])
+us_confirmed=read_csv(urls[2])
+us_deaths=read_csv(urls[3])
+global_deaths=read_csv(urls[4])
+
+
+```
+
+```{r}
+print(head(global_cases))
+head(global_cases)
+```
+
+```{r}
+# Data Visualization
+
+# Load required packages for visualization
+library(ggplot2)
+library(lubridate)
+# Reshape the global_cases dataset
+# Reshape the global_cases dataset
+global_cases_long <- global_cases %>%
+  pivot_longer(cols = -c("Province/State", "Country/Region"),
+               names_to = "Date",
+               values_to = "Cases")
+
+ggplot(global_cases_long, aes(x = as.Date(Date, format = "%m/%d/%y"), y = Cases)) +
+  geom_line() +
+  labs(x = "Date", y = "Number of Cases", title = "Global COVID-19 Cases Over Time")
+```
+
+```{r}
+library(randomForest)
+
+```
+
+```{r}
+global_cases_long <- na.omit(global_cases_long)
+global_cases_long$'Country/Region' <- as.factor(global_cases_long$'Country/Region')
+set.seed(123)  # For reproducibility
+train_index <- sample(1:nrow(global_cases_long), 0.7*nrow(global_cases_long))  
+train_set <- global_cases_long[train_index, ]
+test_set <- global_cases_long[-train_index, ]
+rf_model <- randomForest(`Country/Region` ~ Date + Cases, data=train_set, ntree=500)
+predicted_countries <- predict(rf_model, newdata=test_set)
+accuracy <- sum(predicted_countries == test_set$'Country/Region') / nrow(test_set)
+print(paste("Accuracy: ", round(accuracy * 100, 2), "%", sep=""))
+
+  
+```
+
+```{r}
+library(ggplot2)
+predicted_df <- data.frame(Predicted = predicted_countries, Actual = test_set$`Country/Region`)
+ggplot(predicted_df, aes(x = Actual, y = Predicted)) +
+  geom_jitter(alpha = 0.6, width = 0.3, height = 0.3) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+```{r}
+varImpPlot(rf_model)
+
+```
+
+# Conclusions.
+From the graphs, we can see that the model does quite well at learning the idea of country mapped against cases and date. It is putting a more significant chunk of brainpower into the cases, meaning that it favors looking at case number as its prefered parameter. I know that this model does not have much practical use, though i think it is quite facinating that even given just two parameters it is able to classify what country it is looking at with a degree of accuracy greater than chance. To conclude, we can see that our model on the cleaned data prefers to look at cases when it is trying to classify which country it is looking at. 
+
